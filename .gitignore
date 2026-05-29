@@ -1,10 +1,22 @@
+# Python
 __pycache__/
 *.pyc
 
+# Virtual env
 venv/
 .env
 
-data/reports/
-db/*.db
+# OCR debug
+debug_*.png
 
+# Reports
+*.xlsx
+
+# Database
+*.db
+
+# Python packages
+*.whl
+
+# VS Code
 .vscode/
