@@ -19,9 +19,9 @@ from export.export_excel import (
 def main():
 
     init_db()
-
+    
     messages = read_whatsapp_export(
-        "data/raw/chat.txt"
+    "data/raw/chat.txt"
     )
 
     print(
@@ -38,7 +38,12 @@ def main():
         )
 
         if parsed["osd_name"]:
-
+            print(
+                parsed["datetime"],
+                parsed["osd_name"],
+                parsed["video_freq"],
+                parsed["control_freq"]
+)
             insert_interception(
                 parsed
             )
@@ -55,7 +60,28 @@ def main():
         f"{inserted}"
     )
 
-    export_to_excel()
+    print("\n1. Daily Report")
+    print("2. Full Database Report")
+
+    choice = input("\nChoose option: ")
+
+    if choice == "1":
+
+        report_date = input(
+            "Enter date (YYYY-MM-DD): "
+        )
+
+        export_to_excel(
+            report_date=report_date
+        )
+
+    elif choice == "2":
+
+        export_to_excel()
+
+    else:
+
+        print("Invalid option")
 
 
 if __name__ == "__main__":

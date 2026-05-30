@@ -63,6 +63,27 @@ def parse_message(text):
             f"{date} {time}"
         )
 
+# Якщо поля "Дата:" немає —
+# беремо дату з WhatsApp
+
+    if data["datetime"] is None:
+
+        whatsapp_match = re.search(
+            r"(\d{2})\.(\d{2})\.(\d{2}),\s*(\d{2}:\d{2})",
+            text
+        )
+
+        if whatsapp_match:
+
+            day = whatsapp_match.group(1)
+            month = whatsapp_match.group(2)
+            year = whatsapp_match.group(3)
+            time = whatsapp_match.group(4)
+
+            data["datetime"] = (
+                f"{day}/{month}/20{year} {time}"
+            )
+
     # -------------------------
     # OSD NAME
     # -------------------------
@@ -86,14 +107,15 @@ def parse_message(text):
     # -------------------------
 
     video_match = re.search(
-        r"(Відео|ВІдео|ВІдео|ВІДЕО|ВІдео):\s*(\d+)",
-        text
+        r"відео:\s*(\d+)",
+        text,
+        re.IGNORECASE
     )
 
     if video_match:
 
         data["video_freq"] = int(
-            video_match.group(2)
+            video_match.group(1)
         )
 
     # -------------------------
@@ -154,8 +176,9 @@ def parse_message(text):
     # -------------------------
 
     battery_match = re.search(
-        r"(?:Батка|батка):\s*(\d+).*?(\d+)",
-        text
+        r"батка:\s*(\d+).*?(\d+)",
+        text,
+        re.IGNORECASE
     )
 
     if battery_match:
@@ -174,16 +197,22 @@ def parse_message(text):
 
     lower_text = text.lower()
 
-    if "подавлено" in lower_text:
-
+    if (
+        "подавлено" in lower_text
+        or "подавився" in lower_text
+    ):
         data["status"] = "suppressed"
 
-    elif "зайшов на ураження" in lower_text:
-
+    elif (
+        "ураження" in lower_text
+        or "зайшов на ураження" in lower_text
+    ):
         data["status"] = "strike"
 
-    elif "втрата відео" in lower_text:
-
+    elif (
+        "втрата відео" in lower_text
+        or "відео втрачено" in lower_text
+    ):
         data["status"] = "video_loss"
 
     # -------------------------
@@ -250,5 +279,8 @@ def parse_message(text):
                 data["flight_distance_km"]
             )
         )
+
+    if data["status"] is None:
+        data["status"] = "unknown"
 
     return data

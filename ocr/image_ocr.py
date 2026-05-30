@@ -1,3 +1,4 @@
+import numbers
 import os
 import re
 
@@ -70,10 +71,10 @@ def extract_distance_from_image(image_path):
     # Широкий центральний crop
 
     image = image.crop((
-        int(width * 0.25),
-        int(height * 0.20),
-        int(width * 0.85),
-        int(height * 0.65)
+        int(width * 0.30),
+        int(height * 0.25),
+        int(width * 0.75),
+        int(height * 0.55)
     ))
 
     image = preprocess_image(image)
@@ -85,7 +86,7 @@ def extract_distance_from_image(image_path):
     )
 
     custom_config = (
-        r'--oem 3 --psm 11 '
+        r'--oem 3 --psm 6 '
         r'-c tessedit_char_whitelist='
         r'0123456789.KMkm'
     )
@@ -108,7 +109,7 @@ def extract_distance_from_image(image_path):
     # Шукаємо всі десяткові числа
 
     matches = re.findall(
-        r"(\d+\.\d+)",
+        r"\d+(?:\.\d+)?",
         text
     )
 
@@ -122,9 +123,9 @@ def extract_distance_from_image(image_path):
 
         try:
 
-            value = float(match)
+            match = match.replace(",", ".")
 
-            # Реалістичні FPV дистанції
+            value = float(match)
 
             if value < 2:
                 continue
@@ -140,11 +141,23 @@ def extract_distance_from_image(image_path):
 
             pass
 
+
     if not numbers:
 
         return None
 
-    distance = max(
+    decimal_numbers = [
+        n for n in numbers
+        if not n.is_integer()
+    ]
+
+    if decimal_numbers:
+        distance = max(decimal_numbers)
+    else:
+        distance = max(numbers)
+
+    print(
+        "FOUND:",
         numbers
     )
 
@@ -152,3 +165,47 @@ def extract_distance_from_image(image_path):
         distance,
         2
     )
+if __name__ == "__main__":
+
+    images_dir = r"C:\Users\Admin\fpv_analyzer\data\raw"
+
+    success = 0
+    failed = 0
+
+    for filename in os.listdir(images_dir):
+
+        if not filename.lower().endswith(
+            (".jpg", ".jpeg", ".png")
+        ):
+            continue
+
+        image_path = os.path.join(
+            images_dir,
+            filename
+        )
+
+        distance = extract_distance_from_image(
+            image_path
+        )
+
+        if distance is None:
+
+            failed += 1
+
+            print(
+                "FAILED FILE:",
+                filename
+          )
+
+        else:
+
+            success += 1
+
+        print(
+            f"{filename} -> {distance}"
+        )
+
+    print("\n================")
+    print("SUCCESS:", success)
+    print("FAILED :", failed)
+    print("TOTAL  :", success + failed)

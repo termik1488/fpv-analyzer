@@ -46,7 +46,15 @@ def init_db():
         )
         """
     )
-
+    cursor.execute("""
+       
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_interception
+        ON interceptions (
+            datetime,
+            osd_name
+        )
+    """)
+    
     conn.commit()
 
     conn.close()
@@ -62,7 +70,7 @@ def insert_interception(data):
 
     cursor.execute(
         """
-        INSERT INTO interceptions (
+       INSERT OR IGNORE INTO interceptions (
 
             datetime,
 
