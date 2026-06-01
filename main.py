@@ -15,6 +15,9 @@ from export.export_excel import (
     export_to_excel
 )
 
+from export.export_csv import (
+    export_csv
+)
 
 def main():
 
@@ -59,6 +62,8 @@ def main():
         f"Inserted total: "
         f"{inserted}"
     )
+
+    export_csv()
 
     print("\n1. Daily Report")
     print("2. Full Database Report")

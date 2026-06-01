@@ -3,7 +3,6 @@ import sqlite3
 from datetime import datetime
 from collections import Counter
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
 from openpyxl.styles import (
     PatternFill,
     Font,
@@ -268,14 +267,14 @@ def export_to_excel(
 
         ws.append(row)
 
-        launch_distance = row[12]
+        battery_start = row[9]
 
         current_row = ws.max_row
 
         if (
-            launch_distance
+            battery_start
              and
-            launch_distance < 500
+            battery_start < 800
         ):
 
             for cell in ws[current_row]:
@@ -284,7 +283,7 @@ def export_to_excel(
 
     ws.auto_filter.ref = (
         f"A6:M{ws.max_row}"
-  )
+    )
 
     gray_fill = PatternFill(
         start_color="F2F2F2",
@@ -632,10 +631,6 @@ def export_to_excel(
         exist_ok=True
     )
 
-    timestamp = datetime.now().strftime(
-        "%Y%m%d_%H%M%S"
-    )
-
     if report_date:
 
         output_file = (
@@ -758,3 +753,5 @@ def export_to_excel(
     print(
         f"Excel exported: {output_file}"
     )
+
+    return output_file

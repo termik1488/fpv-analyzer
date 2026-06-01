@@ -10,10 +10,21 @@ venv/
 debug_*.png
 
 # Reports
-*.xlsx
+data/reports/*.xlsx
 
 # Database
-*.db
+db/*.db
+
+# CSV exports
+data/*.csv
+
+# Raw WhatsApp exports
+data/raw/chat.txt
+
+# Images from WhatsApp
+data/raw/*.jpg
+data/raw/*.jpeg
+data/raw/*.png
 
 # Python packages
 *.whl
