@@ -15,58 +15,96 @@ DB_PATH = "db/fpv.db"
 
 
 def export_to_excel(
-    report_date=None
+    report_date=None,
+    date_from="",
+    date_to=""
 ):
 
     conn = sqlite3.connect(DB_PATH)
 
     cursor = conn.cursor()
+    from datetime import datetime
 
+    pretty_date_from = date_from
+    pretty_date_to = date_to
 
-    if report_date:
+    if date_from:
 
-        year, month, day = report_date.split("-")
+        pretty_date_from = datetime.strptime(
+            date_from,
+            "%Y-%m-%d"
+        ).strftime("%d-%m-%Y")
 
-        cursor.execute("""
-            SELECT
-                datetime,
-                osd_name,
-                flight_distance_km,
-                video_freq,
-                control_freq,
-                control_bandwidth,
-                protocol,
-                lora_rate,
-                spreading_factor,
-                battery_start,
-                battery_end,
-                status,
-                estimated_launch_distance_m
-            FROM interceptions
-            WHERE datetime LIKE ?
-            ORDER BY datetime
-        """, (f"{day}/{month}/{year}%",))
+    if date_to:
 
-    else:
+        pretty_date_to = datetime.strptime(
+            date_to,
+            "%Y-%m-%d"
+        ).strftime("%d-%m-%Y")
 
-        cursor.execute("""
-            SELECT
-                datetime,
-                osd_name,
-                flight_distance_km,
-                video_freq,
-                control_freq,
-                control_bandwidth,
-                protocol,
-                lora_rate,
-                spreading_factor,
-                battery_start,
-                battery_end,
-                status,
-                estimated_launch_distance_m
-            FROM interceptions
-            ORDER BY datetime
+    # Фільтр дат
+
+    where_conditions = []
+    params = []
+
+    if date_from:
+
+        where_conditions.append("""
+        date(
+            substr(datetime, 7, 4) || '-' ||
+            substr(datetime, 4, 2) || '-' ||
+            substr(datetime, 1, 2)
+        ) >= date(?)
         """)
+
+        params.append(date_from)
+
+    if date_to:
+
+        where_conditions.append("""
+        date(
+            substr(datetime, 7, 4) || '-' ||
+            substr(datetime, 4, 2) || '-' ||
+            substr(datetime, 1, 2)
+        ) <= date(?)
+        """)
+
+        params.append(date_to)
+
+    where_sql = ""
+
+    if where_conditions:
+
+        where_sql = (
+            "WHERE "
+            + " AND ".join(where_conditions)
+        )
+
+    # а далі вже твій SELECT
+
+
+    cursor.execute(
+        f"""
+        SELECT
+            datetime,
+            osd_name,
+            flight_distance_km,
+            video_freq,
+            control_freq,
+            control_bandwidth,
+            protocol,
+            lora_rate,
+            spreading_factor,
+            battery_start,
+            battery_end,
+            status,
+            estimated_launch_distance_m
+        FROM interceptions
+        {where_sql}
+        ORDER BY datetime
+        """,
+        params
+    )
 
     rows = cursor.fetchall()
     total_records = len(rows)
@@ -127,11 +165,23 @@ def export_to_excel(
     ws.title = "Interceptions"
     ws["A1"] = "Звіт по FPV перехопленням"
 
-    ws["A2"] = (
-        f"Дата звіту: {report_date}"
-        if report_date
-        else "Full Database Report"
-    )
+    if date_from and date_to:
+
+        ws["A2"] = (
+            f"Період: {pretty_date_from} - {pretty_date_to}"
+        )
+
+    elif report_date:
+
+        ws["A2"] = (
+            f"Дата звіту: {report_date}"
+        )
+
+    else:
+
+        ws["A2"] = (
+            "Повна база даних"
+        )
 
     ws["A3"] = (
         f"Сформовано: "
@@ -631,7 +681,14 @@ def export_to_excel(
         exist_ok=True
     )
 
-    if report_date:
+    if date_from and date_to:
+
+        output_file = (
+            f"data/reports/"
+            f"FPV_Report_{pretty_date_from}_to_{pretty_date_to}.xlsx"
+        )
+
+    elif report_date:
 
         output_file = (
             f"data/reports/"
@@ -641,10 +698,9 @@ def export_to_excel(
     else:
 
         output_file = (
-           "data/reports/"
+            "data/reports/"
             "FPV_Full_Report.xlsx"
         )
-
 
     ws.freeze_panes = "A7"
 

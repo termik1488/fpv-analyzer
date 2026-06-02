@@ -33,8 +33,8 @@ def normalize_osd_name(name):
 
     if (
         "МОЛНІЯ" in name
-        or
-        "MOLNIA" in name
+        or "МОЗНІЯ" in name
+        or "MOLNIA" in name
     ):
 
         return "МОЛНІЯ"
@@ -53,8 +53,9 @@ def normalize_osd_name(name):
 
     if (
         "VT40" in name
-        or
-        "UT40" in name
+        or "VT 40" in name
+        or "UT40" in name
+        or "UT 40" in name
     ):
 
         return "VT40"
